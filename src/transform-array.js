@@ -1,50 +1,38 @@
 // const CustomError = require("../extensions/custom-error");
 
 module.exports = function transform(arr) {
-  if (Array.isArray(arr)) {
-    if (arr.length == 0) {
-      return arr;
-    }
-    for (let i = 0; i < arr.length; i++) {
-      if (arr[i] == "--double-next") {
-        if (i == arr.length - 1) {
-          arr.splice(i, 1);
-        } else {
-          arr.splice(i, 1, arr[i + 1]);
-          i++;
-        }
-      }
+  if (!Array.from(arr)) {
+    throw new TypeError();
+  }
 
-      if (arr[i] == "--double-prev") {
-        if (i == 0) {
-          arr.splice(i, 1);
-          i--;
-        } else {
-          arr.splice(i - 1, 2, arr[i - 1], arr[i - 1]);
-        }
-      }
+  let newArr = arr.slice(0);
+  let pos = 0;
+
+  while (pos < newArr.length) {
+    let item = newArr[pos];
+
+    if (item === "--discard-next") {
+      newArr.splice(pos + 1, 1);
+    } else if (item === "--discard-prev" && pos > 0) {
+      newArr.splice(pos - 1, 1);
+    } else if (item === "--double-next") {
+      newArr.splice(pos, 0, newArr[pos + 1]);
+      pos++;
+    } else if (item === "--double-prev") {
+      newArr.splice(pos, 0, newArr[pos - 1]);
+      pos++;
     }
 
-    for (let i = 0; i < arr.length; i++) {
-      if (arr[i] == "--discard-next") {
-        if (i == arr.length - 1) {
-          arr.splice(i, 1);
-        } else {
-          arr.splice(i, 2);
-          i--;
-        }
-      }
+    pos++;
+  }
 
-      if (arr[i] == "--discard-prev") {
-        if (i == 0) {
-          arr.splice(i, 1);
-          i--;
-        } else {
-          arr.splice(i - 1, 2);
-          i = i - 2;
-        }
-      }
-    }
-    return arr;
-  } else throw Error("arr не является массивом");
+  return newArr.filter((item) => {
+    return (
+      item != undefined &&
+      item != "--discard-next" &&
+      item != "--discard-prev" &&
+      item != "--double-next" &&
+      item != "--double-prev"
+    );
+  });
 };
